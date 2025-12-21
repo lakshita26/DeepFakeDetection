@@ -3,7 +3,6 @@
 *Advanced ML-powered deepfake detection with hybrid model architecture*
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/pgkijai301-1801s-projects/v0-image-analysis)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/v69b7R51teR)
 
 ## Overview
 
@@ -143,3 +142,4 @@ Continue building on:
 ## License
 
 MIT License
+
