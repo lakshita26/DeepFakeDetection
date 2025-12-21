@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Shield, Upload, BarChart3, History, Info } from "lucide-react"
+import Link from "next/link"
 
 interface NavigationProps {
   currentSection: string
@@ -34,6 +35,14 @@ export function Navigation({ currentSection, onSectionChange }: NavigationProps)
           </motion.div>
 
           <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
+              <Link href="/login">
+                <Button variant="ghost" size="sm">Login</Button>
+              </Link>
+              <Link href="/signup">
+                <Button variant="default" size="sm">Sign Up</Button>
+              </Link>
+            </div>
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = currentSection === item.id
