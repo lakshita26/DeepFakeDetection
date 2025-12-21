@@ -75,13 +75,28 @@ class DeepfakeDetectionAPI:
         """Preprocess image for inference"""
         try:
             opencv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            
-            normalized, gray = self.preprocessor.preprocess_image_array(opencv_image)
-            
-            if normalized is None:
+            # Run FacePreprocessor steps directly on image array (robust to missing helper methods)
+            face_rect = self.preprocessor.detect_face(opencv_image)
+            if face_rect is None:
                 return None, "No face detected in image"
-            
-            return (normalized, gray, np.array(image)), None
+
+            # Landmarks may require the shape predictor file; fallback gracefully
+            try:
+                landmarks = self.preprocessor.get_landmarks(opencv_image, face_rect)
+                aligned = self.preprocessor.align_face(opencv_image, landmarks)
+            except Exception:
+                aligned = opencv_image
+
+            cropped = self.preprocessor.crop_face(aligned, face_rect)
+
+            # Normalized for deep learning
+            normalized = self.preprocessor.normalize_image(cropped)
+
+            # Grayscale for classical features
+            gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+            gray_resized = cv2.resize(gray, self.preprocessor.target_size)
+
+            return (normalized, gray_resized, np.array(image)), None
             
         except Exception as e:
             return None, f"Preprocessing error: {str(e)}"
@@ -164,8 +179,8 @@ class DeepfakeDetectionAPI:
             # Decide predicted class using fake probability
             is_fake = fake_probability > self.optimal_threshold
             confidence = fake_probability if is_fake else real_probability
-            
-                return {
+
+            return {
                 'is_fake': bool(is_fake),
                 'fake_probability': float(fake_probability),
                 'real_probability': float(real_probability),
@@ -283,12 +298,12 @@ def batch_predict():
                 image = Image.open(file.stream).convert('RGB')
                 
                 # Preprocess image
-                        processed_images, error = detector.preprocess_image(image)
+                processed_images, error = detector.preprocess_image(image)
                 if error:
                     results.append({
                         'index': i,
                         'filename': file.filename,
-                                'error': error
+                        'error': error
                     })
                     continue
                 
