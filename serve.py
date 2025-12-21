@@ -97,24 +97,29 @@ class DeepfakeDetectionAPI:
                         lbph_tensor, fisherface_tensor, efficientnet_tensor,
                         gan_tensor, diffusion_tensor
                     )
-                    
-                    fake_probability = probabilities[0, 1].cpu().item()
+                    # Model was trained with labels: Real=1, Fake=0
+                    # softmax output index 1 -> Real, index 0 -> Fake
+                    real_probability = probabilities[0, 1].cpu().item()
+                    fake_probability = probabilities[0, 0].cpu().item()
                     uncertainty_score = uncertainty[0, 0].cpu().item()
             else:
                 with torch.no_grad():
                     probabilities = self.model.predict_proba(
                         lbph_tensor, fisherface_tensor, efficientnet_tensor
                     )
-                    fake_probability = probabilities[0, 1].cpu().item()
+                    # Model was trained with labels: Real=1, Fake=0
+                    real_probability = probabilities[0, 1].cpu().item()
+                    fake_probability = probabilities[0, 0].cpu().item()
                     uncertainty_score = 1 - abs(fake_probability - 0.5) * 2
             
+            # Decide predicted class using fake probability
             is_fake = fake_probability > self.optimal_threshold
-            confidence = fake_probability if is_fake else (1 - fake_probability)
+            confidence = fake_probability if is_fake else real_probability
             
             return {
                 'is_fake': bool(is_fake),
                 'fake_probability': float(fake_probability),
-                'real_probability': float(1 - fake_probability),
+                'real_probability': float(real_probability),
                 'confidence': float(confidence),
                 'uncertainty': float(uncertainty_score),
                 'threshold_used': float(self.optimal_threshold),
