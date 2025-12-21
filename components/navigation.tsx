@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Upload, BarChart3, History, Info } from "lucide-react"
+import { Shield, Upload, BarChart3, History, Info } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 

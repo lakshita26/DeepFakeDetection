@@ -5,8 +5,6 @@ const PUBLIC_PATHS = ['/login', '/signup', '/api/', '/_next/', '/favicon.ico', '
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  const { pathname } = req.nextUrl
-
   // Always allow the homepage
   if (pathname === '/') return NextResponse.next()
 
