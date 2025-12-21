@@ -231,6 +231,26 @@ export function ResultsSection({ result, onNewAnalysis }: ResultsSectionProps) {
                   <Upload className="h-3.5 w-3.5 mr-2" />
                   Analyze Another
                 </Button>
+                <Button onClick={async () => {
+                  try {
+                    const res = await fetch('/api/history/save', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(result)
+                    })
+                    if (res.status === 401) {
+                      // not authenticated
+                      window.location.href = '/login'
+                      return
+                    }
+                    if (!res.ok) throw new Error('Failed to save')
+                    alert('Saved to your history')
+                  } catch (e) {
+                    alert('Unable to save result: ' + (e instanceof Error ? e.message : String(e)))
+                  }
+                }} className="h-9 text-sm" aria-label="Save to history">
+                  Save
+                </Button>
                 <Button variant="outline" onClick={handleExportReport} className="h-9 text-sm bg-transparent">
                   <Download className="h-3.5 w-3.5 mr-2" />
                   Export Report

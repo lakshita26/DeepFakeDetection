@@ -2,8 +2,9 @@
 
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Shield, Upload, BarChart3, History, Info } from "lucide-react"
+import { Upload, BarChart3, History, Info } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 interface NavigationProps {
   currentSection: string
@@ -23,12 +24,8 @@ export function Navigation({ currentSection, onSectionChange }: NavigationProps)
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2"
-          >
-            <Shield className="h-8 w-8 text-primary" />
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2">
+            <Image src="/logo.png" alt="logo" width={40} height={40} />
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Darpana
             </span>

@@ -47,16 +47,13 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-md mx-auto bg-white dark:bg-card p-6 rounded-md shadow">
-        <div className="flex items-center justify-center mb-4">
-          {/* Show project logo if available, otherwise show shield icon */}
-          <div className="hidden">
-            <Image src="/apple-icon.png" alt="logo" width={56} height={56} className="rounded" />
-          </div>
-          <Shield className="h-12 w-12 text-primary" />
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md bg-white dark:bg-card p-6 rounded-md shadow">
+        <div className="flex flex-col items-center justify-center mb-4">
+          <Image src="/logo.png" alt="logo" width={120} height={120} className="rounded mb-2" />
+          <h1 className="text-lg font-semibold mb-1 text-center">Create Account</h1>
+          <p className="text-sm text-muted-foreground mb-2 text-center">Create an account to save your analysis history</p>
         </div>
-        <h1 className="text-2xl font-semibold mb-4">Create Account</h1>
         <form onSubmit={handleSubmit}>
           <label className="block mb-2">Full name</label>
           <input value={name} onChange={e => setName(e.target.value)} className="w-full p-2 mb-4 border rounded" required />

@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { Shield } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -35,9 +37,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-md mx-auto bg-white dark:bg-card p-6 rounded-md shadow">
-        <h1 className="text-2xl font-semibold mb-4">Login</h1>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-sm bg-white dark:bg-card p-6 rounded-md shadow">
+        <div className="flex flex-col items-center justify-center mb-4">
+          {/* show logo if available */}
+          <Image src="/logo.png" alt="logo" width={120} height={120} className="rounded mb-2" />
+          <h1 className="text-2xl font-semibold mb-1">Darpana</h1>
+          <p className="text-sm text-muted-foreground mb-2">Deepfake Detection</p>
+        </div>
         <form onSubmit={handleSubmit}>
           <label className="block mb-2">Email</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-2 mb-4 border rounded" required />
