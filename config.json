@@ -1,0 +1,57 @@
+{
+  "data": {
+    "datasets": ["ffhq", "faceforensics", "dfdc"],
+    "train_split": 0.7,
+    "val_split": 0.15,
+    "test_split": 0.15,
+    "image_size": [224, 224],
+    "batch_size": 32,
+    "num_workers": 4
+  },
+  "preprocessing": {
+    "face_detection_confidence": 0.5,
+    "alignment_method": "similarity",
+    "normalization": "imagenet",
+    "augmentation": {
+      "rotation_range": 15,
+      "brightness_range": 0.2,
+      "contrast_range": 0.2,
+      "horizontal_flip": true
+    }
+  },
+  "features": {
+    "lbph": {
+      "radius": 3,
+      "neighbors": 8,
+      "grid_x": 8,
+      "grid_y": 8
+    },
+    "fisherface": {
+      "n_components": 100,
+      "pca_components": 150
+    },
+    "efficientnet": {
+      "model_name": "efficientnet-b4",
+      "pretrained": true,
+      "feature_dim": 1792
+    }
+  },
+  "model": {
+    "fusion_method": "concatenate",
+    "hidden_dims": [512, 256, 128],
+    "dropout": 0.3,
+    "activation": "relu"
+  },
+  "training": {
+    "epochs": 100,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "scheduler": "cosine",
+    "early_stopping_patience": 15,
+    "save_best_only": true
+  },
+  "evaluation": {
+    "metrics": ["accuracy", "precision", "recall", "f1", "auc"],
+    "threshold_optimization": "youden_j"
+  }
+}
