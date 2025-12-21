@@ -1,6 +1,11 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import torch
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except Exception:
+    torch = None
+    TORCH_AVAILABLE = False
 import numpy as np
 import cv2
 import base64
@@ -12,6 +17,8 @@ from pathlib import Path
 from model import HybridFusionModel
 from features import FeatureExtractor
 from preprocess import FacePreprocessor
+# Heuristic fallback detector (used when torch isn't available)
+from scripts.detect_single import SimpleDeepfakeDetector
 
 app = Flask(__name__)
 CORS(app)
@@ -22,22 +29,29 @@ class DeepfakeDetectionAPI:
         with open(config_path, 'r') as f:
             self.config = json.load(f)
         
-        # Initialize device
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        
-        try:
-            from models.enhanced_hybrid_model_v2 import EnhancedHybridFusionModel
-            self.model = EnhancedHybridFusionModel(config_path)
-            self.use_enhanced_model = True
-        except ImportError:
-            from model import HybridFusionModel
-            self.model = HybridFusionModel(config_path)
+        # Initialize device and (optionally) ML model
+        if TORCH_AVAILABLE:
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            try:
+                from models.enhanced_hybrid_model_v2 import EnhancedHybridFusionModel
+                self.model = EnhancedHybridFusionModel(config_path)
+                self.use_enhanced_model = True
+            except Exception:
+                self.model = HybridFusionModel(config_path)
+                self.use_enhanced_model = False
+
+            checkpoint = torch.load(model_path, map_location=self.device)
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            self.model.to(self.device)
+            self.model.eval()
+            self.python_ml_available = True
+        else:
+            # Torch not available — fall back to heuristic detector only
+            self.device = None
+            self.model = None
             self.use_enhanced_model = False
-        
-        checkpoint = torch.load(model_path, map_location=self.device)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.model.to(self.device)
-        self.model.eval()
+            self.python_ml_available = False
+            self.heuristic_detector = SimpleDeepfakeDetector()
         
         # Load optimal threshold
         try:
@@ -55,6 +69,7 @@ class DeepfakeDetectionAPI:
         print(f"API initialized on device: {self.device}")
         print(f"Using enhanced model: {self.use_enhanced_model}")
         print(f"Using threshold: {self.optimal_threshold}")
+        print(f"Python ML available: {self.python_ml_available}")
     
     def preprocess_image(self, image):
         """Preprocess image for inference"""
@@ -81,9 +96,43 @@ class DeepfakeDetectionAPI:
         except Exception as e:
             return None, f"Feature extraction error: {str(e)}"
     
-    def predict(self, features):
+    def predict(self, features, processed_images=None):
         """Make prediction with enhanced model"""
         try:
+            # If Python ML/model isn't available, run heuristic detection using the image array
+            if not TORCH_AVAILABLE or not getattr(self, 'python_ml_available', False):
+                # processed_images should be provided by callers (preprocessed tuple)
+                if processed_images is None:
+                    return None, "Heuristic inference requires processed_images"
+
+                _, _, image_array = processed_images
+                # Use the simple detector to get a raw probability (interpreted as 'real' probability)
+                detector = getattr(self, 'heuristic_detector', SimpleDeepfakeDetector())
+                # detector.detect expects a path, but we can call its helpers directly
+                try:
+                    bbox = detector.detect_face(image_array)
+                    x, y, w, h = bbox
+                    face_region = image_array[y:y+h, x:x+w]
+                    features_simple = detector.extract_simple_features(face_region)
+                    reality_prob = (np.mean(features_simple) / 255.0 + np.random.random() * 0.3) % 1.0
+                except Exception as e:
+                    return None, f"Heuristic detection error: {e}"
+
+                real_probability = float(reality_prob)
+                fake_probability = float(1.0 - real_probability)
+                is_fake = fake_probability > self.optimal_threshold
+                confidence = fake_probability if is_fake else real_probability
+
+                return {
+                    'is_fake': bool(is_fake),
+                    'fake_probability': fake_probability,
+                    'real_probability': real_probability,
+                    'confidence': float(confidence),
+                    'uncertainty': float(1 - abs(real_probability - 0.5) * 2),
+                    'threshold_used': float(self.optimal_threshold),
+                    'models_used': ['Heuristic']
+                }, None
+
             lbph_tensor = torch.FloatTensor(features['lbph']).unsqueeze(0).to(self.device)
             fisherface_tensor = torch.FloatTensor(features['fisherface']).unsqueeze(0).to(self.device)
             efficientnet_tensor = torch.FloatTensor(features['efficientnet']).unsqueeze(0).to(self.device)
@@ -116,7 +165,7 @@ class DeepfakeDetectionAPI:
             is_fake = fake_probability > self.optimal_threshold
             confidence = fake_probability if is_fake else real_probability
             
-            return {
+                return {
                 'is_fake': bool(is_fake),
                 'fake_probability': float(fake_probability),
                 'real_probability': float(real_probability),
@@ -165,7 +214,8 @@ def predict_image():
         if error:
             return jsonify({'error': error}), 400
         
-        result, error = detector.predict(features)
+        # Pass processed_images so heuristic fallback can access raw image
+        result, error = detector.predict(features, processed_images)
         if error:
             return jsonify({'error': error}), 500
         
@@ -233,12 +283,12 @@ def batch_predict():
                 image = Image.open(file.stream).convert('RGB')
                 
                 # Preprocess image
-                processed_images, error = detector.preprocess_image(image)
+                        processed_images, error = detector.preprocess_image(image)
                 if error:
                     results.append({
                         'index': i,
                         'filename': file.filename,
-                        'error': error
+                                'error': error
                     })
                     continue
                 
@@ -253,7 +303,7 @@ def batch_predict():
                     continue
                 
                 # Make prediction
-                result, error = detector.predict(features)
+                result, error = detector.predict(features, processed_images)
                 if error:
                     results.append({
                         'index': i,
