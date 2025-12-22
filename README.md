@@ -48,31 +48,6 @@ Open [http://localhost:3000](http://localhost:3000) and start detecting deepfake
 - **ML**: Python, PyTorch, scikit-learn, OpenCV
 - **UI**: shadcn/ui components
 
-## Project Structure
-
-\`\`\`
-.
-├── app/                    # Next.js app directory
-│   ├── api/detect/        # Detection API endpoint
-│   └── page.tsx           # Main application
-├── components/            # React components
-│   ├── upload-section.tsx
-│   ├── results-section.tsx
-│   └── ui/                # shadcn/ui components
-├── lib/                   # Utilities
-│   ├── python-ml.ts       # Python ML integration
-│   └── api.ts
-├── ml/                    # Machine learning
-│   ├── model.py           # PyTorch model
-│   ├── features.py        # Feature extractors
-│   ├── train.py           # Training pipeline
-│   ├── inference.py       # Inference API
-│   └── config.json        # Configuration
-└── scripts/               # Utility scripts
-    ├── train_model.py
-    └── test_model.py
-\`\`\`
-
 ## Usage
 
 ### Web Interface
@@ -126,20 +101,8 @@ See [SETUP.md](./SETUP.md) for detailed instructions.
 5. **Classification**: MLP predicts real/fake with confidence
 6. **Display**: Shows prediction, confidence, and feature importance
 
-## Deployment
-
-Your project is live at:
-**[https://vercel.com/pgkijai301-1801s-projects/v0-image-analysis](https://vercel.com/pgkijai301-1801s-projects/v0-image-analysis)**
-
-Continue building on:
-**[https://v0.app/chat/projects/v69b7R51teR](https://v0.app/chat/projects/v69b7R51teR)**
-
-## Documentation
-
-- [SETUP.md](./SETUP.md) - Complete setup guide
-- [ml/README.md](./ml/README.md) - ML model documentation
-
 ## License
 
 MIT License
+
 
